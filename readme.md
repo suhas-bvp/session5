@@ -1,4 +1,4 @@
-This project implements a basic Convolutional Neural Network (CNN) for classifying handwritten digits from the MNIST dataset using PyTorch within 25k parameters.
+This project implements a basic Convolutional Neural Network (CNN) for classifying handwritten digits from the MNIST dataset using PyTorch, with 10k parameters and an accuracy of 99%.
 
 - `mnist_cnn.py`: Contains the CNN model definition, data loading, training, and evaluation logic.
 - `data/`: This directory will store the downloaded MNIST dataset.
@@ -46,6 +46,9 @@ Convolutional layers: (input channels×kernel height×kernel width + 1) × ou
 
 Fully connected layers: (input features + 1) ) × output features
 
+BatchNorm2d: These layers have two learnable parameters per output channel: one for a scaling factor (γ) and one for a shifting factor (β). 
+The total parameters are 2 times the number of output channels (C out).
+
 -> The +1 accounts for the bias term.
 
 ## Model Output
@@ -57,8 +60,8 @@ Fully connected layers: (input features + 1) ) × output features
 ## Configuration
 The following hyperparameters can be adjusted in `mnist_cnn.py`:
 - `BATCH_SIZE`: Number of samples per batch during training (default: 64).
-- `LEARNING_RATE`: Learning rate for the Adam optimizer (default: 0.001) --> as EPOCHS is 1, no use in this program
-- `EPOCHS`: Number of training epochs (default: 1).
+- `LEARNING_RATE`: Learning rate for the Adam optimizer (default: 0.0005) 
+- `EPOCHS`: Number of training epochs (default: 15).
 
 ### Prerequisites
 - Python 3.12
