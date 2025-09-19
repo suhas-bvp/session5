@@ -78,3 +78,5 @@ The following hyperparameters can be adjusted in `mnist_cnn.py`:
 ## License
 
 This project is open-source and available under the MIT License.
+
+

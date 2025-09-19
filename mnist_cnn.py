@@ -3,89 +3,45 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+import torch.nn.functional as F
 
 # 1. Define the CNN Model
 class SimpleCNN(nn.Module):
-    '''def __init__(self):
-        super(SimpleCNN, self).__init__()
-        # First convolutional layer
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1) # 1 input channel (grayscale), 32 output channels
-        self.relu1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) # Reduces image size by half (28x28 -> 14x14)
-
-        # Second convolutional layer
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
-        self.relu2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2) # Reduces image size by half (14x14 -> 7x7)
-
-        # Fully connected layers
-        # After two pooling layers, image size is 7x7. 64 channels.
-        self.fc1 = nn.Linear(64 * 7 * 7, 128)
-        self.relu3 = nn.ReLU()
-        self.dropout = nn.Dropout(0.5) # Dropout for regularization
-        self.fc2 = nn.Linear(128, 10) # 10 output classes for MNIST (digits 0-9)
-
-    def forward(self, x):
-        x = self.pool1(self.relu1(self.conv1(x)))
-        x = self.pool2(self.relu2(self.conv2(x)))
-        x = x.view(-1, 64 * 7 * 7) # Flatten the tensor for the fully connected layer
-        x = self.dropout(self.relu3(self.fc1(x)))
-        x = self.fc2(x)
-        return x'''
-
-    '''def __init__(self):
-        super(SimpleCNN, self).__init__()
-        # First convolutional layer
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1) # Reduced from 32 to 8 filters
-        self.relu1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) # Reduces image size by half (28x28 -> 14x14)
-
-        # Second convolutional layer
-        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1) # Reduced from 64 to 16 filters, input from conv1
-        self.relu2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2) # Reduces image size by half (14x14 -> 7x7)
-
-        # Fully connected layers
-        # After two pooling layers, image size is 7x7. 16 channels.
-        self.fc1 = nn.Linear(16 * 7 * 7, 32) # Reduced from 64*7*7 to 16*7*7 input, and 128 to 32 output features
-        self.relu3 = nn.ReLU()
-        self.dropout = nn.Dropout(0.5) # Dropout for regularization
-        self.fc2 = nn.Linear(32, 10) # Input from fc1 (32), 10 output classes for MNIST (digits 0-9)
-
-    def forward(self, x):
-        x = self.pool1(self.relu1(self.conv1(x)))
-        x = self.pool2(self.relu2(self.conv2(x)))
-        x = x.view(-1, 16 * 7 * 7) # Flatten the tensor for the fully connected layer, adjusted for 16 channels
-        x = self.dropout(self.relu3(self.fc1(x)))
-        x = self.fc2(x)
-        return x'''
-    
     def __init__(self):
         super(SimpleCNN, self).__init__()
-        # First convolutional layer
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1) # Reduced from 32 to 8 filters
-        self.relu1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) # Reduces image size by half (28x28 -> 14x14)
 
-        # Second convolutional layer
-        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1) # Reduced from 64 to 16 filters, input from conv1
-        self.relu2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2) # Reduces image size by half (14x14 -> 7x7)
+        self.features = nn.Sequential(
+            # First convolutional layer
+            nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1), # Reduced from 32 to 8 filters
+            nn.BatchNorm2d(8),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), # Reduces image size by half (28x28 -> 14x14)
+            nn.Dropout2d(0.0),
 
-        # Fully connected layers
-        # After two pooling layers, image size is 7x7. 16 channels.
-        self.fc1 = nn.Linear(16 * 7 * 7, 28) # Reduced output features from 32 to 28
-        self.relu3 = nn.ReLU()
-        self.dropout = nn.Dropout(0.5) # Dropout for regularization
-        self.fc2 = nn.Linear(28, 10) # Input from fc1 (28), 10 output classes for MNIST (digits 0-9)
+            # Second convolutional layer
+            nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1), # Reduced from 64 to 16 filters, input from conv1
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), # Reduces image size by half (14x14 -> 7x7)
+            nn.Dropout2d(0.1),
+
+            # Third convolutional layer
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1), # Reduced from 64*4 to 128 filters, input from conv1
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), # Reduces image size by half (7x7 -> 3x3)
+            nn.Dropout2d(0.2),   
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(32 * 3 * 3, 10) # Reduced output features from 32 to 10
+        )
 
     def forward(self, x):
-        x = self.pool1(self.relu1(self.conv1(x)))
-        x = self.pool2(self.relu2(self.conv2(x)))
-        x = x.view(-1, 16 * 7 * 7) # Flatten the tensor for the fully connected layer, adjusted for 16 channels
-        x = self.dropout(self.relu3(self.fc1(x)))
-        x = self.fc2(x)
-        return x
+        x = self.features(x)
+        x = x.view(-1,32 * 3 * 3)
+        x = self.classifier(x)
+        return F.log_softmax(x, dim=1)
 
 # 2. Load and Prepare Data
 def get_mnist_dataloaders(batch_size=64):
@@ -107,6 +63,10 @@ def train_model(model, train_loader, optimizer, criterion, device, epochs=5):
     model.train() # Set the model to training mode
     for epoch in range(epochs):
         running_loss = 0.0
+        total_samples=0.0
+        correct_predictions=0.0
+        epoch_accuracy=0.0
+
         for batch_idx, (data, target) in enumerate(train_loader):
             data, target = data.to(device), target.to(device)
 
@@ -115,12 +75,22 @@ def train_model(model, train_loader, optimizer, criterion, device, epochs=5):
             loss = criterion(output, target) # Calculate loss
             loss.backward() # Backward pass (compute gradients)
             optimizer.step() # Update weights
-
             running_loss += loss.item()
-            if batch_idx % 100 == 0: # Print loss every 100 batches
-                print(f'Epoch: {epoch+1}, Batch: {batch_idx}/{len(train_loader)}, Loss: {loss.item():.4f}')
-        print(f'Epoch {epoch+1} finished. Average Loss: {running_loss/len(train_loader):.4f}')
 
+            # Calculate accuracy
+            _, predicted = torch.max(output.data, 1) # Get the class with the highest score
+            total_samples += target.size(0)
+            correct_predictions += (predicted == target).sum().item()
+            epoch_accuracy = (correct_predictions / total_samples) * 100
+
+            #if batch_idx % 100 == 0: # Print loss every 100 batches
+            #    print(f'Epoch: {epoch+1}, Batch: {batch_idx}/{len(train_loader)}, Loss: {loss.item():.4f}')
+            
+        
+        print(f'Epoch {epoch+1} finished. Average Loss: {running_loss/len(train_loader):.4f} && Training Accuracy: {epoch_accuracy:.2f}%')
+        #print(f'Epoch {epoch+1} finished. Training Accuracy: {epoch_accuracy:.2f}%')
+        
+       
 # 4. Evaluation Function
 def evaluate_model(model, test_loader, device):
     model.eval() # Set the model to evaluation mode
@@ -134,7 +104,8 @@ def evaluate_model(model, test_loader, device):
             total += target.size(0)
             correct += (predicted == target).sum().item()
     accuracy = 100 * correct / total
-    print(f'Accuracy on test set: {accuracy:.2f}%')
+
+    #print(f'Accuracy on test set: {accuracy:.2f}%')
     return accuracy
 
 # 5. Parameter Count Function
@@ -149,8 +120,8 @@ if __name__ == "__main__":
 
     # Hyperparameters
     BATCH_SIZE = 64
-    LEARNING_RATE = 0.001
-    EPOCHS = 1
+    LEARNING_RATE = 0.0005
+    EPOCHS = 15
 
     # Get data loaders
     train_loader, test_loader = get_mnist_dataloaders(BATCH_SIZE)
